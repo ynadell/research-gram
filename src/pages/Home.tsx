@@ -18,28 +18,8 @@ const MAX_PAPERS = 100;
 const Home: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
-  const lastPaperElementRef = useCallback((node: HTMLDivElement) => {
-    if (!hasMore) return;
-    
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        if (papers.length < MAX_PAPERS) {
-          const newPapers = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => 
-            generatePaper(papers.length + i + 1)
-          );
-          setPapers(prev => [...prev, ...newPapers]);
-        } else {
-          setHasMore(false);
-        }
-      }
-    }, {
-      threshold: 0.1
-    });
-
-    if (node) observer.current.observe(node);
-  }, [papers.length, hasMore]);
 
   const generatePaper = (index: number): Paper => ({
     title: `Research Paper ${index}`,
@@ -56,12 +36,44 @@ const Home: React.FC = () => {
     likes: Math.floor(Math.random() * 1000)
   });
 
+  const loadMorePapers = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    
+    setIsLoading(true);
+    // Simulate API delay
+    setTimeout(() => {
+      if (papers.length < MAX_PAPERS) {
+        const newPapers = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => 
+          generatePaper(papers.length + i + 1)
+        );
+        setPapers(prev => [...prev, ...newPapers]);
+      } else {
+        setHasMore(false);
+      }
+      setIsLoading(false);
+    }, 500);
+  }, [papers.length, hasMore, isLoading]);
+
+  const lastPaperElementRef = useCallback((node: HTMLDivElement) => {
+    if (!node || isLoading || !hasMore) return;
+    
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        loadMorePapers();
+      }
+    }, {
+      threshold: 0.1,
+      rootMargin: '100px'
+    });
+
+    observer.current.observe(node);
+  }, [loadMorePapers, isLoading, hasMore]);
+
   useEffect(() => {
-    const initialPapers = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => 
-      generatePaper(i + 1)
-    );
-    setPapers(initialPapers);
-  }, []);
+    // Load initial papers
+    loadMorePapers();
+  }, []); // Empty dependency array for initial load only
 
   const handleLike = () => {
     console.log('Liked paper');
@@ -97,7 +109,7 @@ const Home: React.FC = () => {
         </div>
       ))}
       
-      {hasMore && (
+      {isLoading && (
         <div className="snap-start h-screen flex items-center justify-center bg-gray-900">
           <div className="flex flex-col items-center gap-3 text-white">
             <FiLoader className="animate-spin text-blue-400 text-3xl" />
@@ -106,7 +118,7 @@ const Home: React.FC = () => {
         </div>
       )}
       
-      {!hasMore && (
+      {!hasMore && !isLoading && (
         <div className="snap-start h-screen flex items-center justify-center bg-gray-900">
           <div className="text-center p-8 bg-gray-800 rounded-xl shadow-xl">
             <h2 className="text-2xl font-bold mb-2 text-white">That's all for now! 🎉</h2>
