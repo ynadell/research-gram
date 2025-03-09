@@ -42,8 +42,8 @@ Research-Gram is designed to make academic research more accessible and engaging
 flowchart TD
     A[Start: Paper Request] --> B[Fetch from ArXiv API]
     B --> C[Get Abstract]
-    
-    C --> D[Fetch from Semantic Scholar]
+
+    A[Start: Paper Request] --> D[Fetch from Semantic Scholar]
     D --> E[Get TLDR]
     
     C & E --> F[Send to Gemini API]
