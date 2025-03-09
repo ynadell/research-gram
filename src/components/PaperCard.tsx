@@ -29,88 +29,94 @@ const PaperCard: React.FC<PaperCardProps> = ({
   onSave,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 mb-6 hover:shadow-xl transition-shadow duration-300">
-      {/* Header Section */}
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2 hover:text-blue-600 cursor-pointer">
-          {title}
-        </h2>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {authors.map((author, index) => (
-            <span
-              key={index}
-              className="text-sm text-gray-600 hover:text-blue-500 cursor-pointer"
+    <div className="h-screen snap-start flex items-center justify-center bg-gray-900 text-white">
+      <div className="w-full h-full max-w-4xl mx-auto p-8 flex flex-col items-center">
+        {/* Header Section */}
+        <div className="mb-8 text-center w-full">
+          <h2 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            {title}
+          </h2>
+          <div className="flex flex-wrap gap-2 justify-center mb-3">
+            {authors.map((author, index) => (
+              <span
+                key={index}
+                className="text-sm text-gray-300 hover:text-blue-400 cursor-pointer transition-colors"
+              >
+                {author}
+                {index < authors.length - 1 ? "," : ""}
+              </span>
+            ))}
+          </div>
+          <div className="text-sm text-gray-400">
+            Published: {new Date(publishDate).toLocaleDateString()}
+            <span className="mx-2">•</span>
+            <a
+              href={`https://arxiv.org/abs/${arxivId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
             >
-              {author}
-              {index < authors.length - 1 ? "," : ""}
-            </span>
-          ))}
+              arXiv:{arxivId}
+            </a>
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          Published: {new Date(publishDate).toLocaleDateString()}
-          <span className="mx-2">•</span>
-          <a
-            href={`https://arxiv.org/abs/${arxivId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-700"
-          >
-            arXiv:{arxivId}
-          </a>
+
+        {/* Content Section - Scrollable if needed */}
+        <div className="flex-grow overflow-y-auto w-full max-w-2xl mx-auto">
+          {/* Summary Section */}
+          <div className="mb-8 text-center">
+            <h3 className="font-semibold text-gray-200 mb-4 text-xl">Key Points</h3>
+            <ul className="space-y-3">
+              {summary.map((point, index) => (
+                <li key={index} className="text-gray-300">
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Abstract Section */}
+          <div className="text-center">
+            <h3 className="font-semibold text-gray-200 mb-4 text-xl">Abstract</h3>
+            <p className="text-gray-300 leading-relaxed">
+              {abstract}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Summary Section */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-gray-700 mb-2">Key Points</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {summary.map((point, index) => (
-            <li key={index} className="text-gray-600">
-              {point}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Abstract Preview */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-gray-700 mb-2">Abstract</h3>
-        <p className="text-gray-600 line-clamp-3">{abstract}</p>
-        <button className="text-blue-500 hover:text-blue-700 text-sm mt-2">
-          Read more
-        </button>
-      </div>
-
-      {/* Action Bar */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onLike}
-            className="flex items-center space-x-1 text-gray-600 hover:text-green-500"
-          >
-            <FiThumbsUp className="w-5 h-5" />
-            <span>{likes}</span>
-          </button>
-          <button
-            onClick={onDislike}
-            className="text-gray-600 hover:text-red-500"
-          >
-            <FiThumbsDown className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onSave}
-            className="text-gray-600 hover:text-blue-500"
-          >
-            <FiBookmark className="w-5 h-5" />
-          </button>
-          <button
-            onClick={onShare}
-            className="text-gray-600 hover:text-purple-500"
-          >
-            <FiShare2 className="w-5 h-5" />
-          </button>
+        {/* Action Bar - Fixed at bottom */}
+        <div className="mt-8 pt-4 border-t border-gray-700 w-full max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-8">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={onLike}
+                className="flex items-center gap-2 text-gray-300 hover:text-green-400 transition-colors"
+              >
+                <FiThumbsUp className="w-5 h-5" />
+                <span>{likes}</span>
+              </button>
+              <button
+                onClick={onDislike}
+                className="text-gray-300 hover:text-red-400 transition-colors"
+              >
+                <FiThumbsDown className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-6">
+              <button
+                onClick={onSave}
+                className="text-gray-300 hover:text-blue-400 transition-colors"
+              >
+                <FiBookmark className="w-5 h-5" />
+              </button>
+              <button
+                onClick={onShare}
+                className="text-gray-300 hover:text-purple-400 transition-colors"
+              >
+                <FiShare2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
