@@ -5,31 +5,6 @@ A platform for exploring and sharing research paper summaries.
 ## Overview
 Research-Gram is designed to make academic research more accessible and engaging by providing a platform where users can read and interact with research paper summaries.
 
-## System Architecture
-
-```mermaid
-flowchart TD
-    A[Start: Paper Request] --> B[Fetch from ArXiv API]
-    B --> C[Get Abstract]
-    
-    C --> D[Fetch from Semantic Scholar]
-    D --> E[Get TLDR]
-    
-    C & E --> F[Send to Gemini API]
-    F --> G[Generate Bullet Points Summary]
-    
-    G --> H[Extract Key Topics]
-    H --> I[Search ArXiv API]
-    I --> J[Get Related Papers]
-    
-    G & J --> K[Display to User]
-    
-    style A fill:#990066,stroke:#333,color:#fff
-    style G fill:#0066cc,stroke:#333,color:#fff
-    style J fill:#006633,stroke:#333,color:#fff
-    style K fill:#cc3300,stroke:#333,color:#fff
-```
-
 ## Functional Requirements
 
 ### Core Features
@@ -60,6 +35,31 @@ flowchart TD
 - Node.js + Express.js server
 - MongoDB database
 - Redis for caching
+
+### API Flow
+
+```mermaid
+flowchart TD
+    A[Start: Paper Request] --> B[Fetch from ArXiv API]
+    B --> C[Get Abstract]
+    
+    C --> D[Fetch from Semantic Scholar]
+    D --> E[Get TLDR]
+    
+    C & E --> F[Send to Gemini API]
+    F --> G[Generate Bullet Points Summary]
+    
+    G --> H[Extract Key Topics]
+    H --> I[Search ArXiv API]
+    I --> J[Get Related Papers]
+    
+    G & J --> K[Display to User]
+    
+    style A fill:#990066,stroke:#333,color:#fff
+    style G fill:#0066cc,stroke:#333,color:#fff
+    style J fill:#006633,stroke:#333,color:#fff
+    style K fill:#cc3300,stroke:#333,color:#fff
+```
 
 ## External APIs
 
