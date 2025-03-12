@@ -1,5 +1,5 @@
 const axios = require("axios");
-
+//TODO: For all APIs add a retry functionality because they are failing
 // 🔹 Fetch Papers from Arxiv API
 const getArxivPapers = async (req, res) => {
   try {
@@ -30,4 +30,5 @@ const getSemanticScholarPapers = async (req, res) => {
   }
 };
 
+//TODO: Make a combined API for arxiv and semantic scholar pages using Promise.all()
 module.exports = { getArxivPapers, getSemanticScholarPapers };
