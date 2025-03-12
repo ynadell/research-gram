@@ -32,10 +32,8 @@ Research-Gram is designed to make academic research more accessible and engaging
 - React.js for the user interface
 
 ### Backend
-- Node.js + Express.js server
-- MongoDB database
-- Redis for caching
-
+- To start backend go to backend folder and run `node server.js`
+- APIs are in apiController.js file
 ### API Flow
 
 ```mermaid
@@ -45,16 +43,16 @@ flowchart TD
 
     A[Start: Paper Request] --> D[Fetch from Semantic Scholar]
     D --> E[Get TLDR]
-    
+
     C & E --> F[Send to Gemini API]
     F --> G[Generate Bullet Points Summary]
-    
+
     G --> H[Extract Key Topics]
     H --> I[Search ArXiv API]
     I --> J[Get Related Papers]
-    
+
     G & J --> K[Display to User]
-    
+
     style A fill:#990066,stroke:#333,color:#fff
     style G fill:#0066cc,stroke:#333,color:#fff
     style J fill:#006633,stroke:#333,color:#fff
@@ -64,7 +62,7 @@ flowchart TD
 ## External APIs
 
 ### Content & Search
-- [Semantic Scholar API](https://www.semanticscholar.org/product/api/tutorial) for research paper data 
+- [Semantic Scholar API](https://www.semanticscholar.org/product/api/tutorial) for research paper data
 - Arxiv API for fetching research papers
 - Gemini API for paper abstract summarization ([example repo](https://github.com/Shaier/arxiv_summarizer))
 - Complete paper summarization ([example repo](https://github.com/summarizepaper/summarizepaper/tree/master))
