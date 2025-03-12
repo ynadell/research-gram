@@ -1,5 +1,6 @@
 const axios = require("axios");
 //TODO: For all APIs add a retry functionality because they are failing
+//TODO: Fetch DOI from the arxiv API
 // 🔹 Fetch Papers from Arxiv API
 const getArxivPapers = async (req, res) => {
   try {
@@ -17,13 +18,15 @@ const getArxivPapers = async (req, res) => {
 // 🔹 Fetch Papers from Semantic Scholar API
 const getSemanticScholarPapers = async (req, res) => {
   try {
-    const query = req.query.q || "machine learning"; // if q is not given then we show machine learning papers
-    const response = await axios.get(
-      `https://api.semanticscholar.org/graph/v1/paper/search?query=${query}&limit=10`,
-    );
-
+    const doi = req.query.id; // Get DOI from query params
+    if (!doi) {
+      return res.status(400).json({ error: "DOI is required" });
+    }
+    const apiUrl = `https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=title,authors,abstract,year,tldr,url`;
+    const response = await axios.get(apiUrl);
     res.json({ source: "Semantic Scholar", data: response.data });
   } catch (error) {
+    console.error("Error fetching data:", error.message);
     res
       .status(500)
       .json({ error: "Error fetching data from Semantic Scholar" });
