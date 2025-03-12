@@ -1,7 +1,6 @@
 const axios = require("axios");
 //TODO: For all APIs add a retry functionality because they are failing
-//TODO: Fetch DOI from the arxiv API
-// 🔹 Fetch Papers from Arxiv API
+//TODO: Get 10 DOIs from the arxiv API from the below function
 const getArxivPapers = async (req, res) => {
   try {
     const query = req.query.q || "machine learning"; // if q is not given then we show machine learning papers
@@ -14,6 +13,7 @@ const getArxivPapers = async (req, res) => {
     res.status(500).json({ error: "Error fetching data from Arxiv" });
   }
 };
+//TODO: Implement getArxivAbstract from DOI below to return Abstract when given DOI as input
 
 // 🔹 Fetch Papers from Semantic Scholar API
 const getSemanticScholarPapers = async (req, res) => {
@@ -33,5 +33,80 @@ const getSemanticScholarPapers = async (req, res) => {
   }
 };
 
-//TODO: Make a combined API for arxiv and semantic scholar pages using Promise.all()
-module.exports = { getArxivPapers, getSemanticScholarPapers };
+const getGeminiSummary = async (content) => {
+  try {
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const geminiUrl =
+      "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateText";
+
+    const requestBody = {
+      prompt: {
+        text: `
+          Here is the information from two sources about a research paper:\n
+          - **Abstract:** ${content.abstract}\n
+          - **TLDR Summary:** ${content.tldr}\n\n
+
+          **Tasks:**
+          1. Generate a concise summary of the paper.
+          2. List key bullet points highlighting important findings or contributions.
+          3. Identify the most relevant keywords.
+
+          **Output format:**
+          - Summary: ...
+          - Bullet Points: ...
+          - Keywords: ...
+        `,
+      },
+    };
+
+    const response = await axios.post(
+      `${geminiUrl}?key=${geminiApiKey}`,
+      requestBody,
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching summary from Gemini:", error.message);
+    return {
+      summary: "Error generating summary.",
+      bullet_points: [],
+      keywords: [],
+    };
+  }
+};
+
+const fetchResearchPaperData = async (req, res) => {
+  try {
+    const doi = req.query.id; // DOI
+
+    const [abstract, tldr] = await Promise.all([
+      getArxivAbstract(doi),
+      getSemanticScholarPapers(doi),
+    ]);
+
+    const content = { abstract, tldr };
+    const geminiResponse = await getGeminiSummary(content);
+
+    res.json({
+      source: "arXiv & Semantic Scholar",
+      abstract,
+      tldr,
+      summary: geminiResponse.summary || "No summary available",
+      bullet_points: geminiResponse.bullet_points || [],
+      keywords: geminiResponse.keywords || [],
+    });
+  } catch (error) {
+    console.error("Error fetching research paper data:", error.message);
+    res.status(500).json({ error: "Error processing research paper data." });
+  }
+};
+
+module.exports = {
+  getArxivPapers,
+  getSemanticScholarPapers,
+  fetchResearchPaperData,
+  getGeminiSummary,
+};
