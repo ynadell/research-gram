@@ -1,6 +1,6 @@
 const axios = require("axios");
 //TODO: For all APIs add a retry functionality because they are failing
-//TODO: Get 10 DOIs from the arxiv API from the below function
+//TODO: Get 10 DOIs from the arxiv API from the below function while taking key words as inputs
 const getArxivPapers = async (req, res) => {
   try {
     const query = req.query.q || "machine learning"; // if q is not given then we show machine learning papers
