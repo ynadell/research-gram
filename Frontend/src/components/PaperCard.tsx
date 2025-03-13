@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiShare2, FiThumbsUp, FiThumbsDown, FiBookmark } from 'react-icons/fi';
+import React from "react";
+import { FiShare2, FiThumbsUp, FiThumbsDown, FiBookmark } from "react-icons/fi";
 
 interface PaperCardProps {
   title: string;
@@ -65,7 +65,9 @@ const PaperCard: React.FC<PaperCardProps> = ({
         <div className="flex-grow overflow-y-auto w-full max-w-2xl mx-auto">
           {/* Summary Section */}
           <div className="mb-8 text-center">
-            <h3 className="font-semibold text-gray-200 mb-4 text-xl">Key Points</h3>
+            <h3 className="font-semibold text-gray-200 mb-4 text-xl">
+              Key Points
+            </h3>
             <ul className="space-y-3">
               {summary.map((point, index) => (
                 <li key={index} className="text-gray-300">
@@ -76,12 +78,12 @@ const PaperCard: React.FC<PaperCardProps> = ({
           </div>
 
           {/* Abstract Section */}
-          <div className="text-center">
-            <h3 className="font-semibold text-gray-200 mb-4 text-xl">Abstract</h3>
-            <p className="text-gray-300 leading-relaxed">
-              {abstract}
-            </p>
-          </div>
+          {/* <div className="text-center">
+            <h3 className="font-semibold text-gray-200 mb-4 text-xl">
+              Abstract
+            </h3>
+            <p className="text-gray-300 leading-relaxed">{abstract}</p>
+          </div> */}
         </div>
 
         {/* Action Bar - Fixed at bottom */}
@@ -123,4 +125,4 @@ const PaperCard: React.FC<PaperCardProps> = ({
   );
 };
 
-export default PaperCard; 
+export default PaperCard;
