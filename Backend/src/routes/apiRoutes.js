@@ -1,14 +1,14 @@
 const express = require("express");
 const {
   getArxivPapers,
-  getSemanticScholarPapers,
-  getArxivAbstract
+  getArxivAbstract,
+  fetchResearchPaperData,
 } = require("../controllers/apiController");
 
 const router = express.Router();
 
 router.get("/arxiv", getArxivPapers);
 router.get("/arxiv-abstract", getArxivAbstract);
-router.get("/semantic-scholar", getSemanticScholarPapers);
+router.get("/fetchResearchPaperData", fetchResearchPaperData);
 
 module.exports = router;
