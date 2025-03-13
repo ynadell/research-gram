@@ -7,6 +7,7 @@ interface Paper {
   authors: string[];
   abstract: string;
   summary: string[];
+  keywords: string[];
   publishDate: string;
   arxivId: string;
   likes: number;
@@ -15,7 +16,7 @@ interface Paper {
 const ITEMS_PER_PAGE = 1;
 const MAX_PAPERS = 100;
 //TODO: make this dynamic without port number
-const API_ENDPOINT = "http://localhost:5001/api/fetchResearchPaperData";
+const API_ENDPOINT = "http://localhost:5000/api/fetchResearchPaperData";
 
 const Home: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -28,10 +29,11 @@ const Home: React.FC = () => {
       const response = await fetch(`${API_ENDPOINT}`);
       const data = await response.json();
       return {
-        title: `Research Paper`,
-        authors: ["Author 1", "Author 2"],
+        title: data.title || "Untitled Research Paper",
+        authors: data.authors || ["Author 1", "Author 2"],
         abstract: data.abstract || "No abstract available",
-        summary: data.bullet_points || "No summary available",
+        summary: data.bullet_points || [],
+        keywords: data.keywords || [],
         publishDate: new Date().toISOString(),
         arxivId: `2023`,
         likes: Math.floor(Math.random() * 1000),
