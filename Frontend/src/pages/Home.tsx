@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import PaperCard from '../components/PaperCard';
-import { FiLoader } from 'react-icons/fi';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import PaperCard from "../components/PaperCard";
+import { FiLoader } from "react-icons/fi";
 
 interface Paper {
   title: string;
@@ -14,6 +14,7 @@ interface Paper {
 
 const ITEMS_PER_PAGE = 1;
 const MAX_PAPERS = 100;
+const API_ENDPOINT = "http://localhost:5001/api/fetchResearchPaperData";
 
 const Home: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -21,54 +22,74 @@ const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const generatePaper = (index: number): Paper => ({
-    title: `Research Paper ${index}`,
-    authors: ["Author 1", "Author 2"],
-    abstract: "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely...",
-    summary: [
-      "Key finding point 1 for paper " + index,
-      "Key finding point 2 for paper " + index,
-      "Key finding point 3 for paper " + index,
-      "Key finding point 4 for paper " + index
-    ],
-    publishDate: new Date().toISOString(),
-    arxivId: `2023.${index}`,
-    likes: Math.floor(Math.random() * 1000)
-  });
+  const fetchPaperData = async () => {
+    try {
+      const response = await fetch(`${API_ENDPOINT}`);
+      const data = await response.json();
+      return {
+        title: `Research Paper`,
+        authors: ["Author 1", "Author 2"],
+        abstract: data.abstract || "No abstract available",
+        summary: data.bullet_points || "No summary available",
+        publishDate: new Date().toISOString(),
+        arxivId: `2023`,
+        likes: Math.floor(Math.random() * 1000),
+      };
+    } catch (error) {
+      console.error("Error fetching paper:", error);
+      return null;
+    }
+  };
+  // const generatePaper = (index: number): Paper => ({
+  //   title: `Research Paper ${index}`,
+  //   authors: ["Author 1", "Author 2"],
+  //   abstract:
+  //     "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely...",
+  //   summary: [
+  //     "Key finding point 1 for paper " + index,
+  //     "Key finding point 2 for paper " + index,
+  //     "Key finding point 3 for paper " + index,
+  //     "Key finding point 4 for paper " + index,
+  //   ],
+  //   publishDate: new Date().toISOString(),
+  //   arxivId: `2023.${index}`,
+  //   likes: Math.floor(Math.random() * 1000),
+  // });
 
-  const loadMorePapers = useCallback(() => {
+  const loadMorePapers = useCallback(async () => {
     if (isLoading || !hasMore) return;
-    
+
     setIsLoading(true);
-    // Simulate API delay
-    setTimeout(() => {
-      if (papers.length < MAX_PAPERS) {
-        const newPapers = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => 
-          generatePaper(papers.length + i + 1)
-        );
-        setPapers(prev => [...prev, ...newPapers]);
-      } else {
-        setHasMore(false);
-      }
-      setIsLoading(false);
-    }, 500);
+    const newPaper = await fetchPaperData();
+    if (newPaper) {
+      setPapers((prev) => [...prev, newPaper]);
+    } else {
+      setHasMore(false);
+    }
+    setIsLoading(false);
   }, [papers.length, hasMore, isLoading]);
 
-  const lastPaperElementRef = useCallback((node: HTMLDivElement) => {
-    if (!node || isLoading || !hasMore) return;
-    
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        loadMorePapers();
-      }
-    }, {
-      threshold: 0.1,
-      rootMargin: '100px'
-    });
+  const lastPaperElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (!node || isLoading || !hasMore) return;
 
-    observer.current.observe(node);
-  }, [loadMorePapers, isLoading, hasMore]);
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            loadMorePapers();
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: "100px",
+        },
+      );
+
+      observer.current.observe(node);
+    },
+    [loadMorePapers, isLoading, hasMore],
+  );
 
   useEffect(() => {
     // Load initial papers
@@ -76,26 +97,26 @@ const Home: React.FC = () => {
   }, []); // Empty dependency array for initial load only
 
   const handleLike = () => {
-    console.log('Liked paper');
+    console.log("Liked paper");
   };
 
   const handleDislike = () => {
-    console.log('Disliked paper');
+    console.log("Disliked paper");
   };
 
   const handleShare = () => {
-    console.log('Shared paper');
+    console.log("Shared paper");
   };
 
   const handleSave = () => {
-    console.log('Saved paper');
+    console.log("Saved paper");
   };
 
   return (
     <div className="snap-y snap-mandatory h-screen overflow-y-scroll bg-gray-900">
       {papers.map((paper, index) => (
-        <div 
-          key={index} 
+        <div
+          key={index}
           ref={index === papers.length - 1 ? lastPaperElementRef : undefined}
           className="snap-start h-screen"
         >
@@ -108,7 +129,7 @@ const Home: React.FC = () => {
           />
         </div>
       ))}
-      
+
       {isLoading && (
         <div className="snap-start h-screen flex items-center justify-center bg-gray-900">
           <div className="flex flex-col items-center gap-3 text-white">
@@ -117,12 +138,16 @@ const Home: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {!hasMore && !isLoading && (
         <div className="snap-start h-screen flex items-center justify-center bg-gray-900">
           <div className="text-center p-8 bg-gray-800 rounded-xl shadow-xl">
-            <h2 className="text-2xl font-bold mb-2 text-white">That's all for now! 🎉</h2>
-            <p className="text-gray-300">You've reached the end of available papers.</p>
+            <h2 className="text-2xl font-bold mb-2 text-white">
+              That's all for now! 🎉
+            </h2>
+            <p className="text-gray-300">
+              You've reached the end of available papers.
+            </p>
           </div>
         </div>
       )}
