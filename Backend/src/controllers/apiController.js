@@ -121,26 +121,27 @@ const getArxivAbstract = async (req, res) => {
 };
 
 // 🔹 Fetch Papers from Semantic Scholar API
-const getSemanticScholarPapers = async (req, res) => {
+const getSemanticScholarPapers = async (doi) => {
   const maxRetries = 3; // Number of retry attempts
   const delayMs = 1000; // Delay between retries in milliseconds
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const doi = req.query.id;
-      if (!doi) {
+      const doi_id = doi || "10.1017/S0022226797006889";
+      console.log(doi_id, " in semantic scholar papers");
+      if (!doi_id) {
         return res.status(400).json({ error: "DOI is required" });
       }
-      const apiUrl = `https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=title,authors,abstract,year,tldr,url`;
+      const apiUrl = `https://api.semanticscholar.org/graph/v1/paper/DOI:${doi_id}?fields=title,authors,abstract,year,tldr,url`;
       const response = await axios.get(apiUrl);
-      return res.json({
+      return {
         source: "Semantic Scholar",
         tldr: response.data.tldr,
         abstract: response.data.abstract,
         year: response.data.year,
         url: response.data.url,
         title: response.data.title,
-      });
+      };
     } catch (error) {
       console.error(`Attempt ${attempt} failed:`, error.message);
       if (attempt === maxRetries) {
@@ -157,36 +158,43 @@ const getSemanticScholarPapers = async (req, res) => {
 };
 
 const getGeminiSummary = async (content) => {
-  const maxRetries = 10;
-  const delayMs = 1000;
+  const maxRetries = 3; // Adjusted for testing, change as needed
+  const delayMs = 100000;
   let lastError = null;
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const geminiApiKey = process.env.GEMINI_API_KEY;
       const geminiUrl =
-        "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateText";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
       const requestBody = {
-        prompt: {
-          text: `
-            Here is the information from two sources about a research paper:\n
-            - **Abstract:** ${content.abstract}\n
-            - **TLDR Summary:** ${content.tldr}\n\n
+        contents: [
+          {
+            parts: [
+              {
+                text: `
+              Here is the information from two sources about a research paper:\n
+              - **Abstract:** ${content.abstract}\n
+              - **TLDR Summary:** ${content.tldr}\n\n
 
-            **Tasks:**
-            1. Generate a concise summary of the paper.
-            2. List key bullet points highlighting important findings or contributions.
-            3. Identify the most relevant keywords.
+              **Tasks:**
+              1. Generate a concise summary of the paper.
+              2. List key bullet points highlighting important findings or contributions.
+              3. Identify the most relevant keywords.
 
-            **Output format:**
-            - Summary: ...
-            - Bullet Points: ...
-            - Keywords: ...
-          `,
-        },
+              **Output format:**
+              - Summary: ...
+              - Bullet Points: ...
+              - Keywords: ...
+            `,
+              },
+            ],
+          },
+        ],
       };
-
+      console.log(`${geminiUrl}?key=${geminiApiKey}`);
+      console.log("************/n**********/n********/n********/n");
+      console.log("************/n**********/n********/n********/n");
       const response = await axios.post(
         `${geminiUrl}?key=${geminiApiKey}`,
         requestBody,
@@ -195,45 +203,91 @@ const getGeminiSummary = async (content) => {
         },
       );
 
-      return response.data;
+      if (
+        response.data &&
+        response.data.candidates &&
+        response.data.candidates.length > 0
+      ) {
+        return response.data;
+      } else {
+        console.error("Gemini API returned unexpected data:", response.data);
+        throw new Error("Unexpected response from Gemini API");
+      }
     } catch (error) {
       lastError = error;
+      console.warn(
+        `Attempt ${attempt} to fetch from Gemini failed: ${error.message}. Retrying...`,
+      );
       if (attempt === maxRetries) {
-        console.error("Error fetching summary from Gemini:", error.message);
+        console.error(
+          "Max retries reached. Error fetching summary from Gemini:",
+          error,
+        );
         return {
           summary: "Error generating summary.",
           bullet_points: [],
           keywords: [],
         };
       }
-      console.warn(
-        `Attempt ${attempt} to fetch from Gemini failed: ${error.message}. Retrying...`,
-      );
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 };
+const parseGeminiOutput = (geminiText) => {
+  const summaryRegex =
+    /Summary:\s*([\s\S]*?)(?=\nBullet Points:|\nKeywords:|$)/i;
+  const bulletPointsRegex = /Bullet Points:\s*([\s\S]*?)(?=\nKeywords:|$)/i;
+  const keywordsRegex = /Keywords:\s*([\s\S]*)/i;
 
+  const summaryMatch = geminiText.match(summaryRegex);
+  const bulletPointsMatch = geminiText.match(bulletPointsRegex);
+  const keywordsMatch = geminiText.match(keywordsRegex);
+
+  return {
+    summary: summaryMatch ? summaryMatch[1].trim() : "No summary found.",
+    bullet_points: bulletPointsMatch
+      ? bulletPointsMatch[1]
+          .trim()
+          .split("\n")
+          .map((bp) => bp.replace(/^\*\s+/, "").trim())
+          .filter((bp) => bp.length > 0)
+      : [],
+    keywords: keywordsMatch
+      ? keywordsMatch[1]
+          .trim()
+          .split(",")
+          .map((kw) => kw.trim())
+          .filter((kw) => kw.length > 0)
+      : [],
+  };
+};
 const fetchResearchPaperData = async (req, res) => {
   try {
     const doi = req.query.id; // DOI
     console.log("doi is " + doi);
 
-    const [abstract, tldr] = await Promise.all([
-      getArxivAbstract(doi),
+    const response = await Promise.all([
+      // getArxivAbstract(doi),
       getSemanticScholarPapers(doi),
     ]);
-
+    // console.log(response);
+    const abstract = response[0].abstract;
+    const tldr = response[0].tldr;
     const content = { abstract, tldr };
     const geminiResponse = await getGeminiSummary(content);
-    console.log(geminiResponse);
+    // console.log(geminiResponse);
+    console.log(geminiResponse.candidates[0].content.parts[0].text);
+    const parsedOutput = parseGeminiOutput(
+      geminiResponse.candidates[0].content.parts[0].text,
+    );
+    console.log(parsedOutput);
     res.json({
       source: "arXiv & Semantic Scholar",
       abstract,
       tldr,
-      summary: geminiResponse.summary || "No summary available",
-      bullet_points: geminiResponse.bullet_points || [],
-      keywords: geminiResponse.keywords || [],
+      summary: parsedOutput.summary || "No summary available",
+      bullet_points: parsedOutput.bullet_points || [],
+      keywords: parsedOutput.keywords || [],
     });
   } catch (error) {
     console.error("Error fetching research paper data:", error.message);
