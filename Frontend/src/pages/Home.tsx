@@ -16,7 +16,7 @@ interface Paper {
 const ITEMS_PER_PAGE = 1;
 const MAX_PAPERS = 100;
 //TODO: make this dynamic without port number
-const API_ENDPOINT = "http://localhost:5000/api/fetchResearchPaperData";
+const API_ENDPOINT = "/api/fetchResearchPaperData";
 
 const Home: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
